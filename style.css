@@ -1,0 +1,15 @@
+button {
+  background: red;
+  color: #ffffff;
+}
+
+#site_title {
+  text-align: center;
+  background: azure;
+  color: black;
+}
+
+#text_label {
+color: black;
+font-weight: bold
+}
