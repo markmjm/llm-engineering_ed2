@@ -129,21 +129,21 @@ def load_css():
 with gr.Blocks(css=load_css()) as website_summarizer:
     gr.Markdown(
         """
-        # Website Summarizer!
-        Why read the entire website when you can get a quick summary here.
+        # Website Summarizer
+        ## Why read the entire website when you can get a quick summary here!!
         """, elem_id='site_title')
     with gr.Row() as validation:
         with gr.Column(scale=1):
-            openai_token = gr.Text(label='Enter your openai token', placeholder='pasteyour token here: **************',
+            openai_token = gr.Text(label='Enter your openai token', placeholder='paste your token here: **************',
                                    type="password")
             validate_btn = gr.Button('Validate Token!')
         with gr.Column(scale=4):
             pass
-    with gr.Accordion( visible=False) as acc:
+    with gr.Accordion(visible=False) as acc:
         with gr.Row() as summarized:
             with gr.Column(scale=1):
                 url = gr.Text(label='Enter URL of Website to Summarize', placeholder='https://huggingface.co',
-                              elem_id='text_label', value='https://gradio.app' )
+                              elem_id='text_label')
                 summarize_btn = gr.Button('Summarize!')
             with gr.Column(scale=4):
                 summary = gr.Markdown(label='Summary of website', show_copy_button=True)
