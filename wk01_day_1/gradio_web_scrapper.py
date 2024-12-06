@@ -6,9 +6,6 @@ from IPython.display import Markdown, display
 from openai import OpenAI
 import gradio as gr
 
-load_dotenv()
-api_key = os.getenv('OPENAI_API_KEY')
-
 openai = None
 
 
@@ -134,7 +131,8 @@ with gr.Blocks(css=load_css()) as website_summarizer:
         """, elem_id='site_title')
     with gr.Row() as validation:
         with gr.Column(scale=1):
-            openai_token = gr.Text(label='Enter a valid openai token.', placeholder='paste your token here: **************',
+            openai_token = gr.Text(label='Enter a valid openai token.',
+                                   placeholder='paste your token here: **************',
                                    type="password")
             validate_btn = gr.Button('Validate Token!')
         with gr.Column(scale=4):
