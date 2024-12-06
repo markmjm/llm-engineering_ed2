@@ -9,19 +9,31 @@ import gradio as gr
 load_dotenv()
 api_key = os.getenv('OPENAI_API_KEY')
 
-# Check the key
-if not api_key:
-    print("No API key was found - please head over to the troubleshooting notebook in this folder to identify & fix!")
-elif not api_key.startswith("sk-"):
-    print(
-        "An API key was found, but it doesn't start sk-proj-; please check you're using the right key - see troubleshooting notebook")
-elif api_key.strip() != api_key:
-    print(
-        "An API key was found, but it looks like it might have space or tab characters at the start or end - please remove them - see troubleshooting notebook")
-else:
-    print("API key found and looks good so far!")
+openai = None
 
-openai = OpenAI()
+
+def check_openai_api_key(api_key):
+    global openai
+    os.environ['OPENAI_API_KEY'] = api_key
+    try:
+        openai = OpenAI()
+        openai.models.list()
+    except Exception as e:
+        openai = None
+        gr.Warning('Invalid openai key provided')
+        return False
+    else:
+        openai = OpenAI()
+        return True
+
+
+def open_accordion(api_key):
+    response = check_openai_api_key(api_key)
+    if response:
+        gr.Info("Valid openai Token")
+        return gr.Accordion(visible=True)
+    else:
+        return gr.Accordion(visible=False)
 
 
 # A class to represent a Webpage
@@ -81,9 +93,9 @@ def display_summary(url):
     is_valid = is_valid_url(url)
     if is_valid:
         try:
-            summary = summarize(url)
-            if len(str(Markdown(summary).data)) > 0:
-                return Markdown(summary).data
+            results = summarize(url)
+            if len(str(Markdown(results).data)) > 0:
+                return Markdown(results).data
             else:
                 gr.Warning(f'url:  {url}\n is not valid.')
                 return 'Nothing to Show'
@@ -120,12 +132,21 @@ with gr.Blocks(css=load_css()) as website_summarizer:
         # Website Summarizer!
         Why read the entire website when you can get a quick summary here.
         """, elem_id='site_title')
-    with gr.Row():
+    with gr.Row() as validation:
         with gr.Column(scale=1):
-            url = gr.Text(label='Enter URL of Website to Summarize', placeholder='https://huggingface.co',
-                          elem_id='text_label')
-            btn = gr.Button('Summarize!')
+            openai_token = gr.Text(label='Enter your openai token', placeholder='pasteyour token here: **************',
+                                   type="password")
+            validate_btn = gr.Button('Validate Token!')
         with gr.Column(scale=4):
-            summary = gr.Markdown(label='Summary of website', show_copy_button=True)
-    btn.click(fn=display_summary, inputs=[url], outputs=[summary])
+            pass
+    with gr.Accordion( visible=False) as acc:
+        with gr.Row() as summarized:
+            with gr.Column(scale=1):
+                url = gr.Text(label='Enter URL of Website to Summarize', placeholder='https://huggingface.co',
+                              elem_id='text_label', value='https://gradio.app' )
+                summarize_btn = gr.Button('Summarize!')
+            with gr.Column(scale=4):
+                summary = gr.Markdown(label='Summary of website', show_copy_button=True)
+    validate_btn.click(fn=open_accordion, inputs=[openai_token], outputs=[acc], show_progress="full")
+    summarize_btn.click(fn=display_summary, inputs=[url], outputs=[summary], show_progress="full")
 website_summarizer.launch()
