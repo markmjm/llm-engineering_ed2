@@ -78,9 +78,7 @@ def summarize(url, system_prompt, model, tokenizer):
         "stream": False
     }
     response = requests.post(OLLAMA_API, json=payload, headers=HEADERS)
-    print(response.json()['message']['content'])
     return response.json()['message']['content']
-
 
 # A function to display this nicely in the Jupyter output, using markdown
 
