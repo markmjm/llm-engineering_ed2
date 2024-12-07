@@ -4,7 +4,11 @@ from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from IPython.display import Markdown, display
 from openai import OpenAI
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 import gradio as gr
+import time
 
 openai = None
 
@@ -36,18 +40,31 @@ def open_accordion(api_key):
 # A class to represent a Webpage
 # If you're not familiar with Classes, check out the "Intermediate Python" notebook
 class Website:
-
     def __init__(self, url):
-        """
-        Create this Website object from the given url using the BeautifulSoup library
-        """
         self.url = url
-        response = requests.get(url)
-        soup = BeautifulSoup(response.content, 'html.parser')
+        options = Options()
+
+        # Uncomment the line below to run with a visible browser window
+        # options.add_argument("--headless")
+
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
+        service = Service()
+        driver = webdriver.Chrome(service=service, options=options)
+        driver.get(url)
+
+        # Allow more time for potential human verification pages to clear
+        #input("Please complete the verification in the browser and press Enter to continue...")
+        time.sleep(3)
+
+        page_source = driver.page_source
+        driver.quit()
+        soup=BeautifulSoup(page_source, 'html.parser')
         self.title = soup.title.string if soup.title else "No title found"
-        for irrelevant in soup.body(["script", "style", "img", "input"]):
+        for irrelevant in soup(["script", "style", "img", "input"]):
             irrelevant.decompose()
-        self.text = soup.body.get_text(separator="\n", strip=True)
+        self.text = soup.get_text(separator="\n", strip=True)
 
 
 # Define our system prompt - you can experiment with this later, changing the last sentence to 'Respond in markdown in Spanish."
