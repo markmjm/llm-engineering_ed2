@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import requests
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
@@ -135,7 +136,10 @@ def is_valid_url(url):
 
 # create gradio site for the app
 def load_css():
-    with open('../style.css', 'r') as file:
+
+    PROJECT_DIR = Path(__file__).parents[1]
+    with open(f"{PROJECT_DIR}\\style.css", 'r') as file:
+        css_content = file.read()
         css_content = file.read()
     return css_content
 
