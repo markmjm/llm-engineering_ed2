@@ -1,5 +1,6 @@
 import datetime
 import os
+from pathlib import Path
 import requests
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
@@ -11,17 +12,9 @@ from selenium.webdriver.chrome.options import Options
 import time
 import gradio as gr
 
-device = "cuda" # the device to load the model onto
-model_name = "Qwen/QwQ-32B-Preview"
-# Now you do not need to add "trust_remote_code=True"
-model = AutoModelForCausalLM.from_pretrained(
-    "Qwen/Qwen1.5-7B-Chat",
-    torch_dtype="auto",
-    device_map="auto"
-)
-tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen1.5-7B-Chat")
-
-
+OLLAMA_API = "http://localhost:11434/api/chat"
+HEADERS = {"Content-Type": "application/json"}
+MODEL = "llama3.2:latest"
 
 # A class to represent a Webpage
 # If you're not familiar with Classes, check out the "Intermediate Python" notebook
@@ -74,30 +67,19 @@ def summarize(url, system_prompt, model, tokenizer):
     website = Website(url)
     user_prompt= user_prompt_for(website)
 
+# Create a messages list using the same format that we used for OpenAI
+
     messages = [
-        {"role": "system",
-         "content": system_prompt},
-        {"role": "user", "content": user_prompt}
+        {"role": "user", "content":user_prompt}
     ]
-    print(f'started tokenizer: {datetime.datetime.now()}')
-    text = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True
-    )
-    print(f'Ended tokenizer: {datetime.datetime.now()}')
-    model_inputs = tokenizer([text], return_tensors="pt").to(device)
-
-    generated_ids = model.generate(
-        **model_inputs,
-        max_new_tokens=len(system_prompt) + len(user_prompt) * 2
-    )
-    generated_ids = [
-        output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
-    ]
-
-    response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-    return response
+    payload = {
+        "model": MODEL,
+        "messages": messages,
+        "stream": False
+    }
+    response = requests.post(OLLAMA_API, json=payload, headers=HEADERS)
+    print(response.json()['message']['content'])
+    return response.json()['message']['content']
 
 
 # A function to display this nicely in the Jupyter output, using markdown
@@ -134,7 +116,8 @@ def is_valid_url(url):
 
 # create gradio site for the app
 def load_css():
-    with open('../style.css', 'r') as file:
+    PROJECT_DIR = Path(__file__).parents[1]
+    with open(f"{PROJECT_DIR}\\style.css", 'r') as file:
         css_content = file.read()
     return css_content
 
